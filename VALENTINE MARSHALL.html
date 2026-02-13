@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Marshall 💖</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:linear-gradient(135deg,#ff758c,#ff7eb3);
+    font-family:'Poppins', sans-serif;
+    text-align:center;
+}
+
+/* START */
+#startScreen{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+h1{
+    font-family:'Playfair Display', serif;
+    font-size:3rem;
+    color:white;
+    margin-bottom:40px;
+}
+
+button{
+    padding:14px 28px;
+    border:none;
+    border-radius:30px;
+    font-size:16px;
+    cursor:pointer;
+    margin:10px;
+    transition:0.3s ease;
+    font-weight:600;
+}
+
+#yesBtn{
+    background:white;
+    color:#ff4e7a;
+}
+
+#noBtn{
+    background:#ff4e7a;
+    color:white;
+}
+
+/* GAME */
+#gameArea{
+    display:none;
+    position:relative;
+    width:100%;
+    height:100vh;
+    overflow:hidden;
+}
+
+.bgText{
+    position:absolute;
+    top:40%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:3rem;
+    color:rgba(255,255,255,0.15);
+    font-family:'Playfair Display', serif;
+}
+
+.heart{
+    position:absolute;
+    font-size:22px;
+    animation:fall 4s linear forwards;
+}
+
+@keyframes fall{
+    from{transform:translateY(-60px);}
+    to{transform:translateY(100vh);}
+}
+
+#basket{
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:55px;
+    cursor:grab;
+}
+
+#score{
+    position:absolute;
+    top:20px;
+    left:20px;
+    color:white;
+    font-weight:600;
+}
+
+.popup{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    display:none;
+    font-weight:600;
+}
+
+.popup button{
+    margin-top:15px;
+    padding:10px 20px;
+    border:none;
+    border-radius:20px;
+    background:#ff4e7a;
+    color:white;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+    <h1>BE MY VALENTINE, SHALL?</h1>
+    <button id="yesBtn">play this if you agree</button>
+    <button id="noBtn">no, thanks</button>
+</div>
+
+<div id="gameArea">
+    <div class="bgText">kalo ada yang miss, jahat sih.</div>
+    <div id="score">Score: 0</div>
+    <div id="basket">🧺</div>
+    <div class="popup" id="result"></div>
+</div>
+
+<script>
+let score=0;
+let total=0;
+let gameInterval;
+let gameRunning=false;
+let noClickCount=0;
+
+const yesBtn=document.getElementById("yesBtn");
+const noBtn=document.getElementById("noBtn");
+
+/* NO BUTTON */
+noBtn.addEventListener("click",()=>{
+    alert("bang serius bang? T__T");
+    noClickCount++;
+
+    yesBtn.style.transform="scale("+(1+noClickCount*0.2)+")";
+    noBtn.style.transform="scale("+(1-noClickCount*0.2)+")";
+    noBtn.style.position="absolute";
+    noBtn.style.left=Math.random()*80+"%";
+    noBtn.style.top=Math.random()*80+"%";
+
+    if(noClickCount>=3){
+        noBtn.style.display="none";
+    }
+});
+
+/* START GAME */
+yesBtn.addEventListener("click",()=>{
+    document.getElementById("startScreen").style.display="none";
+    document.getElementById("gameArea").style.display="block";
+    startGame();
+});
+
+function startGame(){
+    score=0;
+    total=0;
+    gameRunning=true;
+    document.getElementById("score").innerText="Score: 0";
+
+    gameInterval=setInterval(createHeart,500);
+
+    setTimeout(()=>{
+        clearInterval(gameInterval);
+        gameRunning=false;
+        waitForHeartsToFinish();
+    },10000);
+}
+
+function createHeart(){
+    if(!gameRunning) return;
+
+    const heart=document.createElement("div");
+    heart.className="heart";
+    heart.innerHTML="💖 Sirena";
+    heart.style.left=Math.random()*window.innerWidth+"px";
+    document.getElementById("gameArea").appendChild(heart);
+    total++;
+
+    const basket=document.getElementById("basket");
+
+    const check=setInterval(()=>{
+        const b=basket.getBoundingClientRect();
+        const h=heart.getBoundingClientRect();
+
+        if(
+            h.bottom>=b.top &&
+            h.left<b.right &&
+            h.right>b.left
+        ){
+            score++;
+            document.getElementById("score").innerText="Score: "+score;
+            heart.remove();
+            clearInterval(check);
+        }
+    },50);
+
+    setTimeout(()=>{
+        heart.remove();
+        clearInterval(check);
+    },4000);
+}
+
+/* WAIT ALL HEARTS DONE */
+function waitForHeartsToFinish(){
+    const interval=setInterval(()=>{
+        if(document.querySelectorAll(".heart").length===0){
+            clearInterval(interval);
+            showResult();
+        }
+    },200);
+}
+
+/* DRAG BASKET */
+let dragging=false;
+const basket=document.getElementById("basket");
+
+basket.addEventListener("mousedown",()=>dragging=true);
+document.addEventListener("mouseup",()=>dragging=false);
+document.addEventListener("mousemove",(e)=>{
+    if(dragging){
+        basket.style.left=e.clientX+"px";
+    }
+});
+
+/* RESULT */
+function showResult(){
+    let percent = total===0 ? 0 : Math.floor((score/total)*100);
+    const result=document.getElementById("result");
+    result.style.display="block";
+
+    if(percent>=80){
+        result.innerHTML=
+        "HORE KAMU SAYANG AKU 💖<br>Score: "+percent+"%<br><br>" +
+        "<button onclick='restartGame()'>try again aja yuk</button>";
+    }else{
+        result.innerHTML=
+        "KAMU SAYANG AKU GAK SIH?! 😭<br>Score: "+percent+"%<br><br>" +
+        "<button onclick='restartGame()'>try again aja yuk</button>";
+    }
+}
+
+function restartGame(){
+    document.getElementById("result").style.display="none";
+    const hearts=document.querySelectorAll(".heart");
+    hearts.forEach(h=>h.remove());
+    startGame();
+}
+</script>
+
+</body>
+</html>
